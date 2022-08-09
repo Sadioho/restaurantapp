@@ -1,37 +1,57 @@
+/* eslint-disable jsx-a11y/img-redundant-alt */
 import { motion } from 'framer-motion';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MdShoppingBasket } from 'react-icons/md';
-
+import { actionType } from '../context/reducer';
+import { useStateValue } from '../context/StateProvider';
+import NotFound from '../img/NotFound.svg';
 const RowContainer = ({ flag, data, scrollValue }) => {
-  console.log('🚀 ~ RowContainer ~ data', data);
   const rowContainer = useRef();
+  const [items, setItems] = useState([]);
+  const [{ cartItems }, dispatch] = useStateValue();
+
+  const addToCart = () => {
+    dispatch({
+      type: actionType.SET_CARTITEMS,
+      cartItems: items,
+    });
+    localStorage.setItem('cartItems', JSON.stringify(items));
+  };
+
   useEffect(() => {
     rowContainer.current.scrollLeft += scrollValue;
   }, [scrollValue]);
-
+  useEffect(() => {
+    addToCart();
+  }, [items]);
   return (
     <div
       ref={rowContainer}
-      className={`w-full my-12 flex items-center gap-3 scroll-smooth ${
+      className={`w-full my-12 flex items-center  gap-3 scroll-smooth ${
         flag
-          ? 'overflow-x-scroll scrollbar-none '
-          : 'overflow-x-hidden flex-wrap'
+          ? 'overflow-x-scroll scrollbar-none'
+          : 'overflow-x-hidden flex-wrap justify-center'
       }`}
     >
-      {data &&
+      {data && data.length > 0 ? (
         data.map((item) => (
           <div
             key={item.id}
-            className="w-300 h-[225px] min-w-[340px] lg:min-w-[400px] lg:w-340 bg-cardOverlay p-2 rounded-lg my-12 backdrop-blur-lg hover:drop-shadow-lg flex flex-col items-center justify-between"
+            className="w-275 h-[225px] min-w-[275px] lg:min-w-[300px] lg:w-340 bg-cardOverlay p-2 rounded-lg my-12 backdrop-blur-lg hover:drop-shadow-lg flex flex-col items-center justify-between"
           >
             <div className="w-full flex items-center justify-between">
-              <motion.img
-                whileHover={{ scale: 1.2 }}
-                className="w-auto h-[160px] -mt-8 drop-shadow-2xl"
-                src={item.imageURL}
-                alt=""
-              />
               <motion.div
+                whileHover={{ scale: 1.2 }}
+                className="w-40 -mt-8 h-40 drop-shadow-2xl"
+              >
+                <img
+                  src={item.imageURL}
+                  alt="image"
+                  className="w-full h-full object-contain"
+                />
+              </motion.div>
+              <motion.div
+                onClick={() => setItems([...cartItems, item])}
                 whileTap={{ scale: 0.75 }}
                 className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center cursor-pointer hover:shadow-md"
               >
@@ -50,7 +70,15 @@ const RowContainer = ({ flag, data, scrollValue }) => {
               </div>
             </div>
           </div>
-        ))}
+        ))
+      ) : (
+        <div className="w-full flex flex-col items-center justify-center">
+          <img src={NotFound} alt="not found" className="h-340" />
+          <p className="text-xl text-headingColor font-semibold my-2">
+            Items Not Available
+          </p>
+        </div>
+      )}
     </div>
   );
 };
